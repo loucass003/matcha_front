@@ -5,12 +5,21 @@ import {
   TextField,
   Theme,
 } from "@material-ui/core";
+import { useHistory } from "react-router-dom";
+import { useLogin } from "../../../api/auth/login";
+import { IMutationError } from "../../../api/types";
+import { useAlert } from "../../../hooks/alert";
 import { useForm } from "../../../hooks/form";
-import { str } from "../../../validation";
+import { useFallbackRouter } from "../../../router";
+import { loginPostSchema } from "../../../types/auth/login";
+import { IResponseError } from "../../../types/errors/ResponseError";
+import { AppAlert } from "../../commons/AppAlert";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
+      display: "flex",
+      flexDirection: "column",
       "& > *": {
         margin: theme.spacing(1),
         width: "25ch",
@@ -21,43 +30,32 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export function SignIn() {
   const classes = useStyles();
+  const { mutate: login } = useLogin();
+  const { state: alert, error } = useAlert();
+  const history = useHistory();
+  const { hasFallbackRoute, fallback } = useFallbackRouter();
 
-  const { handleSubmit, fields } = useForm(
-    {
-      password: str.is().and(str.nonempty().withMessage("is empty lol")),
-      username: str.is().and(str.nonempty()),
-      confirm: (val, rules, values) =>
-        rules.password.and(
-          str
-            .equals(values.password)
-            .withMessage("confirm and password does not match")
-        ),
+  const { handleSubmit, fields } = useForm(loginPostSchema, {
+    onSubmit: async ({ email, password }) => {
+      try {
+        await login({ email, password });
+        if (hasFallbackRoute) fallback();
+        else history.push("/");
+      } catch (e) {
+        const { data } = e as IMutationError<IResponseError>;
+        error(data.message);
+      }
     },
-    {
-      onSubmit: (values) => {
-        console.log("FORM SUBMIT EVENT", values.password);
-      },
-      onError: (errors) => {
-        console.log("errros", errors);
-      },
-      checkSubmitOnly: true,
-    }
-  );
+  });
 
   return (
     <form className={classes.root} onSubmit={handleSubmit}>
-      <TextField {...fields.username} label="Username" variant="filled" />
+      <AppAlert state={alert} />
+      <TextField {...fields.email} label="Email" variant="filled" />
       <TextField
         {...fields.password}
         type="password"
         label="Password"
-        variant="filled"
-      />
-      <TextField
-        {...fields.confirm}
-        type="password"
-        name="confirm"
-        label="Outlined"
         variant="filled"
       />
       <Button type="submit" color="primary" variant="contained">

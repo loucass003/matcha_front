@@ -1,3 +1,7 @@
+import { useSession } from "../../hooks/session";
+
 export function Home() {
-  return <div>HOME</div>;
+  const { session } = useSession();
+
+  return <div>BONJOUR {session.user?.firstname}</div>;
 }
