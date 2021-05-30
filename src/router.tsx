@@ -37,9 +37,9 @@ export function useFallbackRouter() {
   const history = useHistory();
 
   return {
-    hasFallbackRoute: !!location.state.fallback,
+    hasFallbackRoute: !!location.state?.fallback,
     fallback: () =>
-      location.state.fallback && history.push(location.state.fallback),
+      location.state?.fallback && history.push(location.state.fallback),
   };
 }
 
