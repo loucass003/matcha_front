@@ -5,13 +5,15 @@ import {
   TextField,
   Theme,
 } from "@material-ui/core";
+import { useHistory } from "react-router-dom";
+import { useSnackbar } from "notistack";
 import { useRegister } from "../../../api/auth/register";
 import { IMutationError } from "../../../api/types";
 import { useAlert } from "../../../hooks/alert";
 import { useForm } from "../../../hooks/form";
-import { registerPostSchema } from "../../../types/auth/register";
-import { IResponseError } from "../../../types/errors/ResponseError";
-import { str } from "../../../validation";
+import { registerPostSchema } from "../../../commons/types/auth/register";
+import { IResponseError } from "../../../commons/types/errors/ResponseError";
+import { str } from "../../../commons/validation";
 import { AppAlert } from "../../commons/AppAlert";
 import { FormFieldDetails } from "../../commons/FormFieldDetails";
 
@@ -32,6 +34,8 @@ export function SignUp() {
   const classes = useStyles();
   const { mutate: register, loading } = useRegister();
   const { state: alert, error } = useAlert();
+  const history = useHistory();
+  const { enqueueSnackbar } = useSnackbar();
 
   const { handleSubmit, fields } = useForm(
     {
@@ -46,8 +50,11 @@ export function SignUp() {
     {
       onSubmit: async ({ firstname, lastname, email, password }) => {
         try {
-          const res = await register({ firstname, lastname, email, password });
-          console.log(res.id);
+          await register({ firstname, lastname, email, password });
+          history.push("/auth/sign-in");
+          enqueueSnackbar("Your account has been created", {
+            variant: "success",
+          });
         } catch (e) {
           const { data } = e as IMutationError<IResponseError>;
           error(data.message);

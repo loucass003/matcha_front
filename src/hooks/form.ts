@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { ValidationError } from "../validation/ValidationError";
-import { Validator } from "../validation/Validator";
+import { ValidationError } from "../commons/validation/ValidationError";
+import { Validator } from "../commons/validation/Validator";
 
 type GetValidatorOutput<T> = T extends Validator<string, infer R> ? R : any;
 type GetRulesOutput<T> = { [K in keyof T]: GetValidatorOutput<T[K]> };

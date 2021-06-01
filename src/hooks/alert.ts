@@ -57,9 +57,11 @@ export function useAlert() {
     return (message: string, timeout = 10000) => {
       const id = uuidv4();
       dispatch({ type: color, message, id });
-      setTimeout(() => {
-        dispatch({ type: "remove", id });
-      }, timeout);
+      if (timeout > 0) {
+        setTimeout(() => {
+          dispatch({ type: "remove", id });
+        }, timeout);
+      }
     };
   };
 

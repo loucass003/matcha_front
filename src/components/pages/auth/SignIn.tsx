@@ -5,14 +5,14 @@ import {
   TextField,
   Theme,
 } from "@material-ui/core";
-import { useHistory } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { useLogin } from "../../../api/auth/login";
 import { IMutationError } from "../../../api/types";
 import { useAlert } from "../../../hooks/alert";
 import { useForm } from "../../../hooks/form";
 import { useFallbackRouter } from "../../../router";
-import { loginPostSchema } from "../../../types/auth/login";
-import { IResponseError } from "../../../types/errors/ResponseError";
+import { loginPostSchema } from "../../../commons/types/auth/login";
+import { IResponseError } from "../../../commons/types/errors/ResponseError";
 import { AppAlert } from "../../commons/AppAlert";
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -58,6 +58,14 @@ export function SignIn() {
         label="Password"
         variant="filled"
       />
+      <Button
+        color="primary"
+        variant="contained"
+        component={Link}
+        to="/auth/reset-password"
+      >
+        Foggot password ?
+      </Button>
       <Button type="submit" color="primary" variant="contained">
         Submit
       </Button>

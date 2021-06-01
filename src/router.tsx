@@ -10,6 +10,8 @@ import {
 } from "react-router-dom";
 import { AuthLayout } from "./components/layouts/AuthLayout";
 import { MainLayout } from "./components/layouts/MainLayout";
+import { Activate } from "./components/pages/auth/Activate";
+import { ResetPassword } from "./components/pages/auth/ResetPassword";
 import { SignIn } from "./components/pages/auth/SignIn";
 import { SignUp } from "./components/pages/auth/SignUp";
 import { Home } from "./components/pages/Home";
@@ -88,6 +90,11 @@ const AllRoutes = () => (
         <Switch>
           <Route path="/auth/sign-in" component={SignIn} />
           <Route path="/auth/sign-up" component={SignUp} />
+          <Route path="/auth/activate/:token" component={Activate} />
+          <Route
+            path="/auth/reset-password/:token?"
+            component={ResetPassword}
+          />
           <Route component={RedirectAs404} />
         </Switch>
       </AuthLayout>

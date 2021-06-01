@@ -1,6 +1,6 @@
 import { createContext, Reducer, useContext, useReducer } from "react";
 import jwt from "jsonwebtoken";
-import { IUserSession } from "../types/user";
+import { IUserSession } from "../commons/types/user";
 
 export const SessionContext = createContext<Session>(undefined as any);
 

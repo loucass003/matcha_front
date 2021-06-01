@@ -1,15 +1,18 @@
 import { useMutate } from "restful-react";
 import { useSession } from "../../hooks/session";
-import { ILoginPost, ILoginResponse } from "../../commons/types/auth/login";
 import { IResponseError } from "../../commons/types/errors/ResponseError";
+import {
+  IActivatePost,
+  IActivateResponse,
+} from "../../commons/types/auth/activate";
 
-export function useLogin() {
+export function useActivate() {
   const { login } = useSession();
 
-  return useMutate<ILoginResponse, IResponseError, never, ILoginPost>({
+  return useMutate<IActivateResponse, IResponseError, never, IActivatePost>({
     verb: "POST",
-    path: `/auth/login`,
-    resolve: (data: ILoginResponse) => {
+    path: `/auth/activate`,
+    resolve: (data: IActivateResponse) => {
       login(data.token);
       return data;
     },
