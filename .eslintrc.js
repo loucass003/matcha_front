@@ -37,6 +37,7 @@ module.exports = {
     "no-restricted-syntax": "off",
     "no-shadow": "off",
     "@typescript-eslint/no-shadow": "warn",
+    "import/no-cycle": "off",
   },
   settings: {
     "import/resolver": {

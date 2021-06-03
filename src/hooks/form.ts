@@ -1,5 +1,6 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { Validator } from "../validation/Validator";
+import { ValidationError } from "../commons/validation/ValidationError";
+import { Validator } from "../commons/validation/Validator";
 
 type GetValidatorOutput<T> = T extends Validator<string, infer R> ? R : any;
 type GetRulesOutput<T> = { [K in keyof T]: GetValidatorOutput<T[K]> };
@@ -23,6 +24,7 @@ interface FieldsRules {
 
 interface FormOptions<Rules> {
   checkSubmitOnly?: boolean;
+  checkOnLoad?: boolean;
   onSubmit?: (values: GetRulesOutput<Rules>) => void;
   onError?: (
     errors: Record<keyof Rules, string | null>,
@@ -39,6 +41,7 @@ interface FormFieldState {
   dirty: boolean;
   value: string;
   error: boolean;
+  detail: ValidationError;
   errorMessage: string;
 }
 
@@ -46,11 +49,13 @@ type FormFieldsBinds<Rules> = {
   [K in keyof Rules]: FormFieldBind;
 };
 
-interface FormFieldBind {
+export interface FormFieldBind {
   value: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   error: boolean;
+  detail: ValidationError;
   helperText: string;
+  dirty: boolean;
 }
 
 interface FormState {
@@ -59,7 +64,7 @@ interface FormState {
 
 export function useForm<F extends FieldsRules>(
   rules: F,
-  options: FormOptions<F> = { checkSubmitOnly: true }
+  options: FormOptions<F> = { checkSubmitOnly: true, checkOnLoad: false }
 ) {
   const [state, setFormState] = useState<FormState>({ submited: false });
 
@@ -75,7 +80,7 @@ export function useForm<F extends FieldsRules>(
           value: (options.defaults && options.defaults[fieldName]) || "",
           error: false,
           heperText: "",
-          dirty: false,
+          dirty: options.checkOnLoad,
         },
       }),
       {} as FormFieldsState<F>
@@ -85,7 +90,7 @@ export function useForm<F extends FieldsRules>(
   const updateFieldState = (
     fieldName: keyof F,
     value: string,
-    checkError: boolean
+    markDirty: boolean
   ) => {
     const values = Object.values(fieldsRules).reduce(
       (v, name) => ({
@@ -106,12 +111,9 @@ export function useForm<F extends FieldsRules>(
             [fieldName]: {
               ...prevFields[fieldName],
               value: validator,
-              ...(checkError
-                ? {
-                    error: false,
-                    errorMessage: "",
-                  }
-                : {}),
+              dirty: markDirty,
+              error: false,
+              errorMessage: "",
             } as FormFieldState,
           } as FormFieldsState<F>)
       );
@@ -123,12 +125,10 @@ export function useForm<F extends FieldsRules>(
             [fieldName]: {
               ...prevFields[fieldName],
               value,
-              ...(checkError
-                ? {
-                    error: true,
-                    errorMessage: e.message,
-                  }
-                : {}),
+              dirty: markDirty,
+              error: true,
+              detail: e,
+              errorMessage: e.message,
             } as FormFieldState,
           } as FormFieldsState<F>)
       );
@@ -136,20 +136,13 @@ export function useForm<F extends FieldsRules>(
   };
 
   useEffect(() => {
-    const hasDefaults =
-      options.defaults &&
-      !!Object.keys(options.defaults).find(
-        (name) => options.defaults && !!options.defaults[name]
-      );
-
     Object.keys(rules).forEach((fieldName) => {
-      updateFieldState(
-        fieldName,
-        fields[fieldName].value,
-        hasDefaults || !options.checkSubmitOnly
-      );
+      updateFieldState(fieldName, fields[fieldName].value, false);
     });
   }, []);
+
+  const canShowErrors = (field: FormFieldState) =>
+    state.submited || (!options.checkSubmitOnly && field.error && field.dirty);
 
   return {
     fields: Object.keys(rules).reduce(
@@ -157,24 +150,19 @@ export function useForm<F extends FieldsRules>(
         ...fieldsState,
         [fieldName]: {
           onChange: (event: ChangeEvent<HTMLInputElement>) => {
-            updateFieldState(
-              fieldName,
-              event.target.value,
-              state.submited || !options.checkSubmitOnly
-            );
+            updateFieldState(fieldName, event.target.value, true);
           },
           value: fields[fieldName].value,
-          error: fields[fieldName].error,
-          helperText: fields[fieldName].errorMessage,
+          error: canShowErrors(fields[fieldName]) && fields[fieldName].error,
+          helperText:
+            canShowErrors(fields[fieldName]) && fields[fieldName].errorMessage,
+          detail: fields[fieldName].detail,
         } as FormFieldBind,
       }),
       {} as FormFieldsBinds<F>
     ),
     handleSubmit: (form: FormEvent) => {
       setFormState((prev) => ({ ...prev, submited: true }));
-      Object.keys(rules).forEach((fieldName) => {
-        updateFieldState(fieldName, fields[fieldName].value, true);
-      });
 
       const errors = Object.keys(rules).reduce(
         (e, fieldName) => ({
